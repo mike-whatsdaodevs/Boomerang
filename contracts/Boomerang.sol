@@ -192,27 +192,40 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
         for(uint256 i; i < length; i ++) {
             uint256 protocolType = params.protocolTypes[i];
             if(protocolType == 1) {
-               (address pairToken, uint pairOut) = abi.decode(params.tokenAndAmountOut, (address, uint256));
-               pairToken.safeTransfer(params.pair_address, amountIn);
-               IUniswapV2Pair(params.pair_address).swap(0, pairOut, address(this), new bytes(0));
-               amountIn = pairOut;
+               amountOut = pairSwap(params.routers[i], amountIn, params.paths[i]);
             }
             if(protocolType == 2) {
-                address[] memory v2Path = abi.decode(params.paths[i], (address[]));
-                amountOut = params.routers[i].uniswapV2(amountIn, 0, v2Path, address(this), value);
+                amountOut = univ2Swap(params.routers[i], amountIn, value, params.paths[i]);
             }
             if(protocolType == 3) {
-                IV3SwapRouter.ExactInputParams memory exactParams = IV3SwapRouter.ExactInputParams(
-                    params.paths[i], 
-                    address(this),
-                    amountIn,
-                    0
-                );
-                amountOut = params.routers[i].uniswapV3(exactParams, value);
+                amountOut = univ3Swap(params.routers[i], amountIn, value, params.paths[i]);
             }
             amountIn = amountOut;
             value = 0;
         }
+    }
+
+    function pairSwap(address pair, uint256 amountIn, bytes memory data) internal returns (uint256 amountOut) {
+        (uint256 requiredAmountOut) = abi.decode(data, (uint));
+        address token0 = IUniswapV2Pair(pair).token0();
+        token0.safeTransfer(pair, amountIn);
+        IUniswapV2Pair(pair).swap(0, requiredAmountOut, address(this), new bytes(0));
+        amountOut = requiredAmountOut;
+    }
+
+    function univ2Swap(address router, uint256 amountIn, uint256 value, bytes memory data) internal returns (uint256 amountOut) {
+        address[] memory v2Path = abi.decode(data, (address[]));
+        amountOut = router.uniswapV2(amountIn, 0, v2Path, address(this), value);
+    }
+
+    function univ3Swap(address router, uint256 amountIn, uint256 value, bytes memory path) internal returns (uint256 amountOut) {
+        IV3SwapRouter.ExactInputParams memory exactParams = IV3SwapRouter.ExactInputParams(
+            path, 
+            address(this),
+            amountIn,
+            0
+        );
+        amountOut = router.uniswapV3(exactParams, value);
     }
 
     function swapSingleCallByFlashLoan(
