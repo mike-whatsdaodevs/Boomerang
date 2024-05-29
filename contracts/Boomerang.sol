@@ -190,13 +190,13 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
         uint256 value = msg.value;
         uint256 length = params.protocolTypes.length;
         for(uint256 i; i < length; i ++) {
-            if(i == 1) {
+            uint256 protocolType = params.protocolTypes[i];
+            if(protocolType == 1) {
                (address pairToken, uint pairOut) = abi.decode(params.tokenAndAmountOut, (address, uint256));
                pairToken.safeTransfer(params.pair_address, amountIn);
                IUniswapV2Pair(params.pair_address).swap(0, pairOut, address(this), new bytes(0));
                amountIn = pairOut;
             }
-            uint256 protocolType = params.protocolTypes[i];
             if(protocolType == 2) {
                 address[] memory v2Path = abi.decode(params.paths[i], (address[]));
                 amountOut = params.routers[i].uniswapV2(amountIn, 0, v2Path, address(this), value);
@@ -219,20 +219,18 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
         Params memory params
     ) public returns (uint256 amountOut) {
         uint256 amountIn = params.amountIn;
-
-        uint256 value = 0;
         uint256 length = params.protocolTypes.length;
         for(uint256 i; i < length; i ++) {
-            if(i == 1) {
+            uint256 protocolType = params.protocolTypes[i];
+            if(protocolType == 1) {
                (address pairToken, uint pairOut) = abi.decode(params.tokenAndAmountOut, (address, uint256));
                pairToken.safeTransfer(params.pair_address, amountIn);
                IUniswapV2Pair(params.pair_address).swap(0, pairOut, address(this), new bytes(0));
                amountIn = pairOut;
             }
-            uint256 protocolType = params.protocolTypes[i];
             if(protocolType == 2) {
                 address[] memory v2Path = abi.decode(params.paths[i], (address[]));
-                amountOut = params.routers[i].uniswapV2(amountIn, 0, v2Path, address(this), value);
+                amountOut = params.routers[i].uniswapV2(amountIn, 0, v2Path, address(this), 0);
             }
             if(protocolType == 3) {
                 IV3SwapRouter.ExactInputParams memory exactParams = IV3SwapRouter.ExactInputParams(
@@ -241,10 +239,9 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
                     amountIn,
                     0
                 );
-                amountOut = params.routers[i].uniswapV3(exactParams, value);
+                amountOut = params.routers[i].uniswapV3(exactParams, 0);
             }
             amountIn = amountOut;
-            value = 0;
         }
     }
 
