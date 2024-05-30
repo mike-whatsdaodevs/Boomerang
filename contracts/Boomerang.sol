@@ -246,35 +246,6 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
         }
     }
 
-          //This function is called after your contract has received the flash loaned amount
-
-    // function encodeV2Calldata(uint256 amountIn, address[] memory path) public view returns (bytes memory data) {
-    //     return abi.encodeCall(
-    //         IV2SwapRouter.swapExactTokensForTokens,
-    //         (
-    //             amountIn,
-    //             0,
-    //             path,
-    //             address(this)
-    //         )
-    //     );
-    // }
-
-    // function encodeV3Calldata(uint256 amountIn, bytes memory path) public view returns (bytes memory data) {
-    //     IV3SwapRouter.ExactInputParams memory params = IV3SwapRouter.ExactInputParams(
-    //         path, 
-    //         address(this),
-    //         amountIn,
-    //         0
-    //     );
-    //     return abi.encodeCall(
-    //         IV3SwapRouter.exactInput,
-    //         (
-    //             params
-    //         )
-    //     );
-    // }
-
     function paramsEncode(Params memory params) public view returns (bytes memory d) {
         d = abi.encode(params);
     }
@@ -317,8 +288,6 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
 
         Params memory p = paramsDecode(params);
         swapSingleCallByFlashLoan(p);
-        
-        //Logic goes here
         
         uint256 totalAmount = amount + premium;
         IERC20(asset).approve(address(POOL), totalAmount);
