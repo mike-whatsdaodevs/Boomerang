@@ -171,8 +171,6 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
         bytes[] paths;
         address token;
         uint256 amountIn;
-        address pair_address;
-        bytes tokenAndAmountOut;
     }
 
     function encodePair(address token, uint256 amount) external view returns (bytes memory) {
@@ -236,23 +234,13 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
         for(uint256 i; i < length; i ++) {
             uint256 protocolType = params.protocolTypes[i];
             if(protocolType == 1) {
-               (address pairToken, uint pairOut) = abi.decode(params.tokenAndAmountOut, (address, uint256));
-               pairToken.safeTransfer(params.pair_address, amountIn);
-               IUniswapV2Pair(params.pair_address).swap(0, pairOut, address(this), new bytes(0));
-               amountIn = pairOut;
+               amountOut = pairSwap(params.routers[i], amountIn, params.paths[i]);
             }
             if(protocolType == 2) {
-                address[] memory v2Path = abi.decode(params.paths[i], (address[]));
-                amountOut = params.routers[i].uniswapV2(amountIn, 0, v2Path, address(this), 0);
+                amountOut = univ2Swap(params.routers[i], amountIn, 0, params.paths[i]);
             }
             if(protocolType == 3) {
-                IV3SwapRouter.ExactInputParams memory exactParams = IV3SwapRouter.ExactInputParams(
-                    params.paths[i], 
-                    address(this),
-                    amountIn,
-                    0
-                );
-                amountOut = params.routers[i].uniswapV3(exactParams, 0);
+                amountOut = univ3Swap(params.routers[i], amountIn, 0, params.paths[i]);
             }
             amountIn = amountOut;
         }
