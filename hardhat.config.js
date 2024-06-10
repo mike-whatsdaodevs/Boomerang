@@ -38,7 +38,7 @@ module.exports = {
         process.env.PRIVATE_KEY_DODO !== undefined ? [process.env.PRIVATE_KEY_DODO] : [],
     },
     polygon: {
-      url: "https://polygon-mainnet.infura.io/v3/a9888517f076475d805eae5283c7c007",
+      url: "https://polygon.drpc.org",
       accounts: 
         process.env.PRIVATE_KEY_DODO !== undefined ? [process.env.PRIVATE_KEY_DODO] : [],
     },

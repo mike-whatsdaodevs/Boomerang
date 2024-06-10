@@ -17,8 +17,9 @@ async function main() {
   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
-  let boom_address = "0x2A96125a981daaa8e965F67101FdF4BE4a11D1ca";
-  let pair_address = "0x4789E9A75499035B2102a1aabD72eb2c27CE3898";
+  let boom_address = "0x8FD70f94790d06b8338b86eE776F6de7cb40Ea58";
+  let pair_address = "0x4864A8833a42838A47E453d816B5212C80EA8e08";
+  let vault_address = "0xbDb0f9DAedbE52941233D794F16404178dBd70Ee";
 
   let uniswap_routerV2 = process.env.P_UNISAWP_ROUTERV2;
   let quick_routerV2 = process.env.P_QUICK_ROUTERV2;
@@ -46,7 +47,7 @@ async function main() {
   // await recoveryTx.wait();
   // console.log(recoveryTx.hash);return;
 
-  // let approveTx = await boom.safeApprove(wmatic_address, uniswap_routerV2);
+  // let approveTx = await boom.safeApprove(usdt_address, uniswap_routerV2);
   // await approveTx.wait();
   // console.log(approveTx.hash);
   // return;
@@ -93,10 +94,9 @@ async function main() {
     protocolTypes: [3,1,3],
     routers: [uniswap_routerV2, pair_address, uniswap_routerV2],
     paths: [path1, pathx, path2],
-    token: wmatic_address,
+    target: deployer.address,
     amountIn: amount,
   }
-
   let paramsEncodeData = await boom.paramsEncode(params);
   console.log(paramsEncodeData);
 

@@ -41,11 +41,11 @@ contract Vault is
 
     receive() external payable {}
 
-    function initialize(
-    ) external initializer {
+    function initialize(address _profitToken) external initializer {
         __Pausable_init();
         __Ownable_init();
         __UUPSUpgradeable_init();
+        profitToken = _profitToken;
     }
 
     function setBoomerang(address _boomerang) external onlyOwner {
