@@ -17,8 +17,8 @@ async function main() {
   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
-  let boom_address = "0x531523A7DFa3ac57777aced84B141A815B6ce65d";
-  let pair_address = "0x8Ae546879797EaBfaF4c66e15D27A644b38082B7";
+  let boom_address = "0x2A96125a981daaa8e965F67101FdF4BE4a11D1ca";
+  let pair_address = "0x4789E9A75499035B2102a1aabD72eb2c27CE3898";
 
   let uniswap_routerV2 = process.env.P_UNISAWP_ROUTERV2;
   let quick_routerV2 = process.env.P_QUICK_ROUTERV2;
@@ -46,7 +46,7 @@ async function main() {
   // await recoveryTx.wait();
   // console.log(recoveryTx.hash);return;
 
-  // let approveTx = await boom.safeApprove(usdt_address, uniswap_routerV2);
+  // let approveTx = await boom.safeApprove(wmatic_address, uniswap_routerV2);
   // await approveTx.wait();
   // console.log(approveTx.hash);
   // return;

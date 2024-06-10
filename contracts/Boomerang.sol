@@ -11,6 +11,7 @@ import {TransferHelper, IERC20} from "./TransferHelper.sol";
 import {Address} from '@openzeppelin/contracts/utils/Address.sol';
 import {IUniswapV2Pair} from "./interfaces/IUniswapV2Pair.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {IVault} from "./interfaces/IVault.sol";
 
 import {FlashLoanSimpleReceiverBase} from "@aave/core-v3/contracts/flashloan/base/FlashLoanSimpleReceiverBase.sol";
 import {IPoolAddressesProvider} from "@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol";
@@ -22,13 +23,15 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
     using Address for address;
 
     address public weth9;
+    address public vault;
 
     uint24[] private fees = [100, 500, 3000, 10000];
 
-    constructor(address _weth, address _addressProvider) 
+    constructor(address _weth, address _vault, address _addressProvider) 
         FlashLoanSimpleReceiverBase(IPoolAddressesProvider(_addressProvider))
     {
         weth9 = _weth;
+        vault = _vault;
     }
 
     function getSinglePath(address token0, address token1, uint24 fee) public view returns (bytes memory path) {
@@ -169,7 +172,7 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
         uint256[] protocolTypes;
         address[] routers;
         bytes[] paths;
-        address token;
+        address target;
         uint256 amountIn;
     }
 
@@ -181,10 +184,9 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
         Params memory params
     ) external payable returns (uint256 amountOut) {
         uint256 amountIn = params.amountIn;
-        if (params.token != weth9 || msg.value == 0) {
-            params.token.safeTransferFrom(msg.sender, address(this), amountIn);
-        }
-
+        // if (params.token != weth9 || msg.value == 0) {
+        //     params.token.safeTransferFrom(msg.sender, address(this), amountIn);
+        // }
         uint256 value = msg.value;
         uint256 length = params.protocolTypes.length;
         for(uint256 i; i < length; i ++) {
@@ -292,7 +294,17 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
         uint256 totalAmount = amount + premium;
         IERC20(asset).approve(address(POOL), totalAmount);
 
+        uint256 tokenBalance = IERC20(asset).balanceOf(address(this));
+
+        uint256 profit = tokenBalance - totalAmount;
+        IERC20(asset).transfer(vault, profit);
+        IVault(vault).profit(p.target, asset, profit);
         return true;
+    }
+
+
+    function setVault(address _vault) external onlyOwner {
+        vault = _vault;
     }
 
     receive() external payable {}
