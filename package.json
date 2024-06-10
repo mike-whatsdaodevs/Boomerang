@@ -10,6 +10,7 @@
     "@nomiclabs/hardhat-waffle": "^2.0.6",
     "@openzeppelin/contracts": "^4.7.0",
     "@uniswap/v3-core": "^1.0.1",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "ethers": "^5.7.2"
   }
 }

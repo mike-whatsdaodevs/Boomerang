@@ -124,7 +124,13 @@ async function main() {
     paths: [path1, pathx, path2],
     token: wmatic_address,
     amountIn: amount,
+    pair_address: "0xcD6F66765AC400671CDfedAaBa992AC0e5E47149",
+    tokenAndAmountOut: pairdata,
   }
+
+  // let swapSingleCallTx = await poolsPrice.swapSingleCall(params, override);
+  // await swapSingleCallTx.wait();
+  // console.log(swapSingleCallTx.hash);return;
 
   let swapSingleCallByFlashLoanTx = await poolsPrice.swapSingleCallByFlashLoan(params);
   await swapSingleCallByFlashLoanTx.wait();

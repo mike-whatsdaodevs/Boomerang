@@ -17,7 +17,8 @@ async function main() {
   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
-  let pathPrice_address = "0x1d74cC711D5801a7dAfD4612eCBCeA53C296Cfed";
+  let boom_address = "0x531523A7DFa3ac57777aced84B141A815B6ce65d";
+  let pair_address = "0x8Ae546879797EaBfaF4c66e15D27A644b38082B7";
 
   let uniswap_routerV2 = process.env.P_UNISAWP_ROUTERV2;
   let quick_routerV2 = process.env.P_QUICK_ROUTERV2;
@@ -37,15 +38,21 @@ async function main() {
   let fees = [100, 500, 3000, 10000];
 
 
-  const poolsPrice = await ethers.getContractAt('PoolsPrice', pathPrice_address, signer);
+  const boom = await ethers.getContractAt('Boomerang', boom_address, signer);
   const weth9 = await ethers.getContractAt('IWETH9', wmatic_address, signer)
   const token = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", usdc_address, signer);
 
-  // let recoveryTx = await poolsPrice.recovery(wmatic_address, deployer.address);
+  // let recoveryTx = await boom.recovery(wmatic_address, deployer.address);
   // await recoveryTx.wait();
   // console.log(recoveryTx.hash);return;
 
-  let path1 = await poolsPrice.getMultiPath(
+  // let approveTx = await boom.safeApprove(usdt_address, uniswap_routerV2);
+  // await approveTx.wait();
+  // console.log(approveTx.hash);
+  // return;
+
+
+  let path1 = await boom.getMultiPath(
     [ 
       wmatic_address, 
       weth_address,
@@ -58,7 +65,8 @@ async function main() {
     ]
   );
 
-  let path2 = await poolsPrice.getMultiPath(
+
+  let path2 = await boom.getMultiPath(
     [ 
       usdt_address, 
       usdc_address,
@@ -71,86 +79,42 @@ async function main() {
     ]
   );
 
-  // let path2 = await poolsPrice.getSinglePath(usdt_address, weth9_address, fees[1]);
-  // let path3 = await poolsPrice.getSinglePath(usdt_address, weth9_address, fees[3]);
-  //let path2 = await poolsPrice.getSinglePath(usdc_address, weth9_address, fees[1]);
 
-  // let approveTx = await token.approve(pathPrice_address, ethers.utils.parseEther("10000"));
-  // await approveTx.wait();
-  // console.log("")
-
-  // let safeApprove1Tx = await poolsPrice.safeApprove(usdt_address, uniswap_routerV2);
-  // await safeApprove1Tx.wait();
-
-  // let safeApprove2Tx = await poolsPrice.safeApprove(weth9_address, uniswap_routerV2);
-  // await safeApprove2Tx.wait();
-
-  //  let safeApprove3Tx = await poolsPrice.safeApprove(usdt_address, sushiswap_routerV2);
-  // await safeApprove3Tx.wait();
-
-  // let safeApprove4Tx = await poolsPrice.safeApprove(weth9_address, sushiswap_routerV2);
-  // await safeApprove4Tx.wait();
-
-
-  //  let safeApprove5Tx = await poolsPrice.safeApprove(usdt_address, pancakeswap_routerV2);
-  // await safeApprove5Tx.wait();
-
-  // let safeApprove6Tx = await poolsPrice.safeApprove(weth9_address, pancakeswap_routerV2);
-  // await safeApprove6Tx.wait();
-
-  let amount = ethers.utils.parseEther("10");
-  let amount1 = ethers.utils.parseUnits("1", 6);
+  let amount = ethers.utils.parseEther("5");
+  let amount1 = ethers.utils.parseUnits("4", 6);
   let override = {
     value: amount
   }
 
-  // let depositTx = await weth9.deposit(override);
-  // await depositTx.wait();
-  // console.log(depositTx.hash);
+  let pathx = ethers.utils.defaultAbiCoder.encode([ "uint256"], [ amount1 ]);
 
-  // console.log(await token.balanceOf(deployer.address));
-
-  // let tx = await poolsPrice.justWethSwapDirect(
-  //   uniswap_routerV2,
-  //   path1,
-  //   weth9_address,
-  //   amount
-  // //  override
-  // );
-  // await tx.wait();
-  // return;
-
-  let pairdata = await poolsPrice.encodePair(wmatic_address, amount1);
-  console.log(pairdata);
  
   let params = {
-    protocolTypes: [3],
-    routers: [uniswap_routerV2],
-    paths: [path1],
+    protocolTypes: [3,1,3],
+    routers: [uniswap_routerV2, pair_address, uniswap_routerV2],
+    paths: [path1, pathx, path2],
     token: wmatic_address,
     amountIn: amount,
-    pair_address: "0x22A4A8aCbFAf23aC2674b7632df88aD8f65D4C72",
-    tokenAndAmountOut: pairdata,
   }
 
-  let paramsEncodeData = await poolsPrice.paramsEncode(params);
+  let paramsEncodeData = await boom.paramsEncode(params);
   console.log(paramsEncodeData);
 
-  let paramsDecodeData = await poolsPrice.paramsDecode(paramsEncodeData);
+  let paramsDecodeData = await boom.paramsDecode(paramsEncodeData);
   console.log(paramsDecodeData);
-  return;
 
-  let tx1 = await poolsPrice.swapSingleCall(
-    params,
-   // override
+  let tx1 = await boom.requestFlashLoan(
+    wmatic_address,
+    amount,
+    paramsEncodeData
   );
   await tx1.wait();
-  console.log("static result:", tx1.hash);
-  let endBalance = await token.attach(wmatic_address).balanceOf(pathPrice_address);
+  console.log("hash:", tx1.hash);
+  let endBalance = await token.attach(wmatic_address).balanceOf(boom_address);
   console.log(ethers.utils.formatEther(endBalance));
 
 
-  // let tx = await poolsPrice.justWethSwapDirect(
+  // let tx = await boom.justWethSwapDirect(
   //   uniswap_routerV2,
   //   path1,
   //   weth9_address,

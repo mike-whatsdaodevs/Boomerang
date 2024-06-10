@@ -27,12 +27,6 @@ async function main() {
   const obj = await Boomerang.deploy(facotry_address, weth9_address);
   await obj.deployed()
   console.log('Boomerang deployed to:', obj.address)
-
-  let pool = process.env.POOL_ETH_USDC_500;
-  let token = process.env.USDC;
-
-  let tx = await obj.setPool(token, pool);
-  await tx.wait();
   return;
 
   // 0xf67394B56827246644359D4A3fc0D817dF8E90c0

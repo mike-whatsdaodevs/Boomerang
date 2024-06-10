@@ -43,8 +43,7 @@ async function main() {
   await pair.deployed()
   console.log('pair deployed to:', pair.address)
 
-
-  let tx = await pair.initialize(usdt_address, weth_address);
+  let tx = await pair.initialize(wmatic_address, usdt_address);
   await tx.wait();
   console.log(tx.hash); 
   return;

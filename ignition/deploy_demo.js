@@ -20,16 +20,14 @@ async function main() {
   let my_address = signer.address;
   console.log('my_address is:', my_address)
 
-  let quoterv2_address = process.env.QUOTER_V2;
-  let factory_address = process.env.UNISWAPV2_FACTORY;
-  // let weth9_address = process.env.WETH9;
-  let wmatic_address = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270";
-  let aave_provider_address = "0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb";
+  const Demo = await hre.ethers.getContractFactory('Demo')
+  const obj = await Demo.deploy();
+  await obj.deployed()
+  console.log('Demo deployed to:', obj.address)
 
-  const Boomerang = await hre.ethers.getContractFactory('Boomerang')
-  const boomerang = await Boomerang.deploy(wmatic_address, aave_provider_address);
-  await boomerang.deployed()
-  console.log('boomerang deployed to:', boomerang.address)
+  let tx = await obj.set(my_address, 14000);
+  await tx.wait();
+  console.log(tx.hash);
   return;
 
   // 0xf67394B56827246644359D4A3fc0D817dF8E90c0
