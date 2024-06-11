@@ -35,12 +35,12 @@ module.exports = {
     eth: {
       url: "https://eth.llamarpc.com",
       accounts: 
-        process.env.PRIVATE_KEY_DODO !== undefined ? [process.env.PRIVATE_KEY_DODO] : [],
+        process.env.PRIVATE_KEY_BOOM !== undefined ? [process.env.PRIVATE_KEY_BOOM] : [],
     },
     polygon: {
-      url: "https://polygon.drpc.org",
+      url: "https://polygon.meowrpc.com",
       accounts: 
-        process.env.PRIVATE_KEY_DODO !== undefined ? [process.env.PRIVATE_KEY_DODO] : [],
+        process.env.PRIVATE_KEY_BOOM !== undefined ? [process.env.PRIVATE_KEY_BOOM] : [],
     },
     local: {
       url: process.env.LOCAL,
@@ -50,7 +50,7 @@ module.exports = {
     hardhat: {
       forking: {
         // url: process.env.ETH,
-        url: "https://mainnet.infura.io/v3/b084830758e840efa86148741bff0f70",
+        url: "https://polygon-mainnet.infura.io/v3/a9888517f076475d805eae5283c7c007",
       }
     }
   },

@@ -27,6 +27,8 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
 
     uint24[] private fees = [100, 500, 3000, 10000];
 
+    error PairError(address token, address pair);
+
     constructor(address _weth, address _vault, address _addressProvider) 
         FlashLoanSimpleReceiverBase(IPoolAddressesProvider(_addressProvider))
     {
@@ -206,10 +208,21 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
     }
 
     function pairSwap(address pair, uint256 amountIn, bytes memory data) internal returns (uint256 amountOut) {
-        (uint256 requiredAmountOut) = abi.decode(data, (uint));
+        (uint256 requiredAmountOut, address requiredTokenOut) = abi.decode(data, (uint, address));
         address token0 = IUniswapV2Pair(pair).token0();
-        token0.safeTransfer(pair, amountIn);
-        IUniswapV2Pair(pair).swap(0, requiredAmountOut, address(this), new bytes(0));
+        address token1 = IUniswapV2Pair(pair).token1();
+        uint256 amount0Out;
+        uint256 amount1Out;
+        if (requiredTokenOut == token0) {
+            token1.safeTransfer(pair, amountIn);
+            amount0Out = requiredAmountOut;
+        } else if (requiredTokenOut == token1) {
+            token0.safeTransfer(pair, amountIn);
+            amount1Out = requiredAmountOut;
+        } else {
+            revert PairError(requiredTokenOut, pair);
+        }
+        IUniswapV2Pair(pair).swap(amount0Out, amount1Out, address(this), new bytes(0));
         amountOut = requiredAmountOut;
     }
 

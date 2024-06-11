@@ -21,14 +21,16 @@ async function main() {
   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
-  let wmatic_address = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270";
+  let usdt_address = process.env.USDT;
+
+  console.log("usdt_address is:", usdt_address);
 
   const Vault = await hre.ethers.getContractFactory('Vault')
   const vault = await Vault.deploy()
   await vault.deployed()
   console.log('vault deployed to:', vault.address);
 
-  const initialize_data = await vault.populateTransaction.initialize(wmatic_address);
+  const initialize_data = await vault.populateTransaction.initialize(usdt_address);
   console.log("initialize_data data is",initialize_data)
 
   const BoomerangProxy = await hre.ethers.getContractFactory('BoomerangProxy')

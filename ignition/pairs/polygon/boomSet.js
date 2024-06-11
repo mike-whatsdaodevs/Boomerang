@@ -20,32 +20,13 @@ async function main() {
   let pair_address = process.env.WMATIC_USDT_PAIR;
   let vault_address = process.env.VAULT;
 
-  const vault = await ethers.getContractAt('Vault', vault_address, deployer);
+  const boom = await ethers.getContractAt('Boomerang', boom_address, signer);
 
-  // let setBoomerangTx = await vault.setBoomerang(boom_address);
-  // await setBoomerangTx.wait();
-  // console.log(setBoomerangTx.hash);
-  // return;
+  console.log(await boom.vault());return;
 
-  // let amount = ethers.utils.parseUnits("1500", 18);
-  // let addMemberValueTx = await vault.addMemberValue(deployer.address, amount);
-  // await addMemberValueTx.wait();
-  // console.log(addMemberValueTx.hash);
-  // return;
-
-  let claimTx = await vault.claim();
-  await claimTx.wait();
-  console.log(claimTx.hash);
-
-  let profit = await vault.profits(deployer.address);
-  console.log(ethers.utils.formatUnits(profit, 6));
-
-  let claimedAmount = await vault.claimed(deployer.address);
-  console.log(ethers.utils.formatUnits(claimedAmount, 6));
-
-
-
-
+  let setVaultTx = await boom.setVault(vault_address);
+  await setVaultTx.wait();
+  console.log(setVaultTx.hash);
 }
 
 async function buildPath(poolsPrice, tokenIn, tokenOut, fee) {

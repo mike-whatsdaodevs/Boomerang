@@ -25,7 +25,7 @@ async function main() {
   // let weth9_address = process.env.WETH9;
   let wmatic_address = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270";
   let aave_provider_address = "0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb";
-  let vault_address = "0xbDb0f9DAedbE52941233D794F16404178dBd70Ee";
+  let vault_address = process.env.VAULT;
 
   const Boomerang = await hre.ethers.getContractFactory('Boomerang')
   const boomerang = await Boomerang.deploy(wmatic_address, vault_address, aave_provider_address);
