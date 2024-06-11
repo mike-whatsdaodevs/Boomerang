@@ -24,8 +24,8 @@ contract Vault is
 	uint256 public tokenReserve;
 	address public profitToken;
 
-	uint256 totalProfit;
-	uint256 totalClaimed;
+	uint256 public totalProfit;
+	uint256 public totalClaimed;
 
 	event Profit(address target, address token, uint256 amount, uint256 currentProfit, uint256 timestamp);
 

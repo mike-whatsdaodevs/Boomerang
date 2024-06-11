@@ -38,7 +38,7 @@ module.exports = {
         process.env.PRIVATE_KEY_BOOM !== undefined ? [process.env.PRIVATE_KEY_BOOM] : [],
     },
     polygon: {
-      url: "https://polygon.meowrpc.com",
+      url: "https://1rpc.io/matic",
       accounts: 
         process.env.PRIVATE_KEY_BOOM !== undefined ? [process.env.PRIVATE_KEY_BOOM] : [],
     },

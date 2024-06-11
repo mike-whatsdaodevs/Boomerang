@@ -22,6 +22,10 @@ async function main() {
 
   const vault = await ethers.getContractAt('Vault', vault_address, deployer);
 
+  // let syncTx = await vault.sync();
+  // await syncTx.wait();
+  // console.log(syncTx.hash);
+  // return;
   // let setBoomerangTx = await vault.setBoomerang(boom_address);
   // await setBoomerangTx.wait();
   // console.log(setBoomerangTx.hash);
@@ -33,15 +37,18 @@ async function main() {
   // console.log(addMemberValueTx.hash);
   // return;
 
-  let claimTx = await vault.claim();
-  await claimTx.wait();
-  console.log(claimTx.hash);
+  // let claimTx = await vault.claim();
+  // await claimTx.wait();
+  // console.log(claimTx.hash);
 
   let profit = await vault.profits(deployer.address);
   console.log(ethers.utils.formatUnits(profit, 6));
 
   let claimedAmount = await vault.claimed(deployer.address);
   console.log(ethers.utils.formatUnits(claimedAmount, 6));
+
+  console.log(await vault.totalProfit());
+  console.log(await vault.totalClaimed());
 
 
 
