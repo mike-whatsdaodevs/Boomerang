@@ -7,6 +7,7 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/U
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {IVault} from "./interfaces/IVault.sol";
+import {IWETH9} from "./interfaces/IWETH9.sol";
 contract Vault is
 	IVault,
     OwnableUpgradeable, 
@@ -89,6 +90,19 @@ contract Vault is
 		IERC20Upgradeable(profitToken).transfer(msg.sender, profit);
 		profits[msg.sender] = 0;
 		claimed[msg.sender] += profit;
+	}
+
+	function forceWithdrawERC20(address token, address recipient) external onlyOwner {
+		uint256 balance = IERC20Upgradeable(token).balanceOf(address(this));
+		IERC20Upgradeable(token).transfer(recipient, balance);
+	}
+
+	function forceWithdrawNative(address weth9, address recipient) external onlyOwner {
+		uint256 balance = IERC20Upgradeable(weth9).balanceOf(address(this));
+        if (balance > 0) {
+            IWETH9(weth9).withdraw(balance);
+        }
+       	payable(recipient).transfer(balance);
 	}
 
 	 /// uups interface
