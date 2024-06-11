@@ -24,6 +24,9 @@ contract Vault is
 	uint256 public tokenReserve;
 	address public profitToken;
 
+	uint256 totalProfit;
+	uint256 totalClaimed;
+
 	event Profit(address target, address token, uint256 amount, uint256 currentProfit, uint256 timestamp);
 
     constructor() {
@@ -80,6 +83,8 @@ contract Vault is
 		uint256 profit = profits[target] + amount;
 		require(profit + claimed[target] <= members[target], "E: profit exceed maximum");
 		profits[target] = profit;
+
+		totalProfit += profit;
 		emit Profit(target, token, amount, profit, block.timestamp);
 	}
 
@@ -90,6 +95,8 @@ contract Vault is
 		IERC20Upgradeable(profitToken).transfer(msg.sender, profit);
 		profits[msg.sender] = 0;
 		claimed[msg.sender] += profit;
+		tokenReserve -= profit;
+		totalClaimed += profit;
 	}
 
 	function forceWithdrawERC20(address token, address recipient) external onlyOwner {
@@ -104,6 +111,10 @@ contract Vault is
         }
        	payable(recipient).transfer(balance);
 	}
+
+	function sync() external {
+		tokenReserve = IERC20Upgradeable(profitToken).balanceOf(address(this));
+    }
 
 	 /// uups interface
     function _authorizeUpgrade(address newImplementation)

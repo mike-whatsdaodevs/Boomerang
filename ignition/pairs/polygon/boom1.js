@@ -17,9 +17,9 @@ async function main() {
   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
-  let boom_address = "0x8FD70f94790d06b8338b86eE776F6de7cb40Ea58";
-  let pair_address = "0x4864A8833a42838A47E453d816B5212C80EA8e08";
-  let vault_address = "0xbDb0f9DAedbE52941233D794F16404178dBd70Ee";
+  let boom_address = process.env.BOOM_MAIN;
+  let pair_address = process.env.WMATIC_USDT_PAIR;
+  let vault_address = process.env.VAULT;
 
   let uniswap_routerV2 = process.env.P_UNISAWP_ROUTERV2;
   let quick_routerV2 = process.env.P_QUICK_ROUTERV2;
@@ -47,30 +47,16 @@ async function main() {
   // await recoveryTx.wait();
   // console.log(recoveryTx.hash);return;
 
-  let approveTx = await boom.safeApprove(usdt_address, uniswap_routerV2);
-  await approveTx.wait();
-  console.log(approveTx.hash);
-  return;
+  // let approveTx = await boom.safeApprove(wmatic_address, uniswap_routerV2);
+  // await approveTx.wait();
+  // console.log(approveTx.hash);
+  // return;
 
 
   let path1 = await boom.getMultiPath(
     [ 
-      usdt, 
-      weth_address,
-      wmatic_address
-
-    ],
-    [
-      fees[1],
-      fees[3]
-    ]
-  );
-
-
-  let path2 = await boom.getMultiPath(
-    [ 
       usdt_address, 
-      usdc_address,
+      weth_address,
       wmatic_address
 
     ],
@@ -81,13 +67,27 @@ async function main() {
   );
 
 
-  let amount = ethers.utils.parseEther("5");
-  let amount1 = ethers.utils.parseUnits("4", 6);
+  let path2 = await boom.getMultiPath(
+    [ 
+      usdt_address,
+      usdc_address,
+      usdt_address
+
+    ],
+    [
+      fees[1],
+      fees[1]
+    ]
+  );
+
+
+  let amount = ethers.utils.parseUnits("1.5", 6);
+  let amount1 = ethers.utils.parseUnits("1.95", 6);
   let override = {
     value: amount
   }
 
-  let pathx = ethers.utils.defaultAbiCoder.encode([ "uint256"], [ amount1 ]);
+  let pathx = ethers.utils.defaultAbiCoder.encode([ "uint256", "address"], [ amount1, usdt_address]);
 
  
   let params = {
@@ -104,7 +104,7 @@ async function main() {
   console.log(paramsDecodeData);
 
   let tx1 = await boom.requestFlashLoan(
-    wmatic_address,
+    usdt_address,
     amount,
     paramsEncodeData
   );
