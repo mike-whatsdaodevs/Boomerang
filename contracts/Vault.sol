@@ -109,7 +109,9 @@ contract Vault is
         if (balance > 0) {
             IWETH9(weth9).withdraw(balance);
         }
-       	payable(recipient).transfer(balance);
+
+        uint256 ethBalance = address(this).balance;
+       	payable(recipient).transfer(balance + ethBalance);
 	}
 
 	function sync() external {
