@@ -38,7 +38,7 @@ module.exports = {
         process.env.PRIVATE_KEY_BOOM !== undefined ? [process.env.PRIVATE_KEY_BOOM] : [],
     },
     polygon: {
-      url: "https://1rpc.io/matic",
+      url: "https://polygon-mainnet.infura.io/v3/a9888517f076475d805eae5283c7c007",
       accounts: 
         process.env.PRIVATE_KEY_BOOM !== undefined ? [process.env.PRIVATE_KEY_BOOM] : [],
     },

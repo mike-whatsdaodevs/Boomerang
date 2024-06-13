@@ -29,6 +29,9 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
 
     error PairError(address token, address pair);
 
+    mapping(address => bool) public whitelistProtocol;
+    mapping(address => bool) public managers;
+
     constructor(address _weth, address _vault, address _addressProvider) 
         FlashLoanSimpleReceiverBase(IPoolAddressesProvider(_addressProvider))
     {
@@ -36,8 +39,26 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
         vault = _vault;
     }
 
+    modifier onlyWhiltelist(address protocol) {
+        require(whitelistProtocol[protocol], "E: protocol is not allowed");
+        _;
+    }
+
+    modifier onlyManager() {
+        require(managers[msg.sender], "E: caller is not allowed");
+        _;
+    }
+
     function getSinglePath(address token0, address token1, uint24 fee) public view returns (bytes memory path) {
         path = abi.encodePacked(token0, fee, token1);
+    }
+
+    function setProtocolWhitelist(address protocol, bool status) external onlyOwner {
+        whitelistProtocol[protocol] = status;
+    }
+
+    function setManager(address manager, bool status) external onlyOwner {
+        managers[manager] = status;
     }
 
     function getMultiPath(address[] memory tokens, uint24[] memory fees) public view returns (bytes memory path) {
@@ -165,7 +186,7 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
     }
 
 
-    function safeApprove(address token, address protocol) external {
+    function safeApprove(address token, address protocol) external onlyWhiltelist(protocol) {
         token.safeApprove(protocol, type(uint256).max);
     }
 
@@ -182,30 +203,30 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
         return abi.encode(token, amount);
     }
 
-    function swapSingleCall(
-        Params memory params
-    ) external payable returns (uint256 amountOut) {
-        uint256 amountIn = params.amountIn;
-        // if (params.token != weth9 || msg.value == 0) {
-        //     params.token.safeTransferFrom(msg.sender, address(this), amountIn);
-        // }
-        uint256 value = msg.value;
-        uint256 length = params.protocolTypes.length;
-        for(uint256 i; i < length; i ++) {
-            uint256 protocolType = params.protocolTypes[i];
-            if(protocolType == 1) {
-               amountOut = pairSwap(params.routers[i], amountIn, params.paths[i]);
-            }
-            if(protocolType == 2) {
-                amountOut = univ2Swap(params.routers[i], amountIn, value, params.paths[i]);
-            }
-            if(protocolType == 3) {
-                amountOut = univ3Swap(params.routers[i], amountIn, value, params.paths[i]);
-            }
-            amountIn = amountOut;
-            value = 0;
-        }
-    }
+    // function swapSingleCall(
+    //     Params memory params
+    // ) internal payable returns (uint256 amountOut) {
+    //     uint256 amountIn = params.amountIn;
+    //     // if (params.token != weth9 || msg.value == 0) {
+    //     //     params.token.safeTransferFrom(msg.sender, address(this), amountIn);
+    //     // }
+    //     uint256 value = msg.value;
+    //     uint256 length = params.protocolTypes.length;
+    //     for(uint256 i; i < length; i ++) {
+    //         uint256 protocolType = params.protocolTypes[i];
+    //         if(protocolType == 1) {
+    //            amountOut = pairSwap(params.routers[i], amountIn, params.paths[i]);
+    //         }
+    //         if(protocolType == 2) {
+    //             amountOut = univ2Swap(params.routers[i], amountIn, value, params.paths[i]);
+    //         }
+    //         if(protocolType == 3) {
+    //             amountOut = univ3Swap(params.routers[i], amountIn, value, params.paths[i]);
+    //         }
+    //         amountIn = amountOut;
+    //         value = 0;
+    //     }
+    // }
 
     function pairSwap(address pair, uint256 amountIn, bytes memory data) internal returns (uint256 amountOut) {
         (uint256 requiredAmountOut, address requiredTokenOut) = abi.decode(data, (uint, address));
@@ -227,11 +248,12 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
     }
 
     function univ2Swap(address router, uint256 amountIn, uint256 value, bytes memory data) internal returns (uint256 amountOut) {
-        address[] memory v2Path = abi.decode(data, (address[]));
-        amountOut = router.uniswapV2(amountIn, 0, v2Path, address(this), value);
+        (address[] memory v2Path, uint256 amountOutMin) = abi.decode(data, (address[], uint256));
+        amountOut = router.uniswapV2(amountIn, amountOutMin, v2Path, address(this), value);
     }
 
-    function univ3Swap(address router, uint256 amountIn, uint256 value, bytes memory path) internal returns (uint256 amountOut) {
+    function univ3Swap(address router, uint256 amountIn, uint256 value, bytes memory data) internal returns (uint256 amountOut) {
+        (bytes memory path, uint256 amountOutMin) = abi.decode(data, (bytes, uint256));
         IV3SwapRouter.ExactInputParams memory exactParams = IV3SwapRouter.ExactInputParams(
             path, 
             address(this),
@@ -243,7 +265,7 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
 
     function swapSingleCallByFlashLoan(
         Params memory params
-    ) public returns (uint256 amountOut) {
+    ) internal returns (uint256 amountOut) {
         uint256 amountIn = params.amountIn;
         uint256 length = params.protocolTypes.length;
         for(uint256 i; i < length; i ++) {
@@ -275,9 +297,7 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
         token.safeTransfer(recipient, balance);
     }
 
-    /// token 0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619 weth
-    /// wmatic 0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270
-    function requestFlashLoan(address _token, uint256 _amount, bytes memory params) public {
+    function requestFlashLoan(address _token, uint256 _amount, bytes memory params) public onlyManager {
         address receiverAddress = address(this);
         address asset = _token;
         uint256 amount = _amount;
