@@ -38,7 +38,7 @@ module.exports = {
         process.env.PRIVATE_KEY_BOOM !== undefined ? [process.env.PRIVATE_KEY_BOOM] : [],
     },
     polygon: {
-      url: "https://polygon-mainnet.infura.io/v3/a9888517f076475d805eae5283c7c007",
+      url: "https://polygon-mainnet.infura.io/v3/" + process.env.INFURA,
       accounts: 
         process.env.PRIVATE_KEY_BOOM !== undefined ? [process.env.PRIVATE_KEY_BOOM] : [],
     },
@@ -50,7 +50,7 @@ module.exports = {
     hardhat: {
       forking: {
         // url: process.env.ETH,
-        url: "https://polygon-mainnet.infura.io/v3/a9888517f076475d805eae5283c7c007",
+        url: "https://polygon-mainnet.infura.io/v3/"+process.env.INFURA,
       }
     }
   },
