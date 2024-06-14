@@ -291,11 +291,11 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
         p = abi.decode(params, (Params));
     }
 
-     /// force withdraw token balance
-    function recovery(address token, address recipient) external onlyOwner {
-        uint256 balance = IERC20(token).balanceOf(address(this));
-        token.safeTransfer(recipient, balance);
-    }
+    //  /// force withdraw token balance
+    // function recovery(address token, address recipient) external onlyOwner {
+    //     uint256 balance = IERC20(token).balanceOf(address(this));
+    //     token.safeTransfer(recipient, balance);
+    // }
 
     function requestFlashLoan(address _token, uint256 _amount, bytes memory params) public onlyManager {
         address receiverAddress = address(this);
