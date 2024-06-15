@@ -32,6 +32,8 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
     mapping(address => bool) public whitelistProtocol;
     mapping(address => bool) public managers;
 
+    uint256 public volume;
+
     constructor(address _weth, address _vault, address _addressProvider) 
         FlashLoanSimpleReceiverBase(IPoolAddressesProvider(_addressProvider))
     {
@@ -298,6 +300,7 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
     // }
 
     function requestFlashLoan(address _token, uint256 _amount, bytes memory params) public onlyManager {
+        volume += _amount;
         address receiverAddress = address(this);
         address asset = _token;
         uint256 amount = _amount;
