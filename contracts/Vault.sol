@@ -27,6 +27,10 @@ contract Vault is
 	uint256 public totalProfit;
 	uint256 public totalClaimed;
 
+	mapping(address => uint256) public lastClaimedTimestamp;
+	uint256 interval;
+	uint256 maximumProfit;
+
 	event Profit(address target, address token, uint256 amount, uint256 currentProfit, uint256 timestamp);
 
     constructor() {
@@ -43,6 +47,18 @@ contract Vault is
     	_;
     }
 
+    function verifyTimestamp(address addr) internal {
+    	require(
+    		lastClaimedTimestamp[addr] + interval <= block.timestamp,
+    		"E: timestamp error"
+    	);
+    	lastClaimedTimestamp[addr] = block.timestamp;
+    }
+
+    function verifyProfit(uint256 profit) internal {
+    	require(profit <= maximumProfit, "E: profit too large");
+    }
+
     receive() external payable {}
 
     function initialize(address _profitToken) external initializer {
@@ -50,6 +66,8 @@ contract Vault is
         __Ownable_init();
         __UUPSUpgradeable_init();
         profitToken = _profitToken;
+        interval = 1 days;
+        maximumProfit = 10E6;
     }
 
     function setBoomerang(address _boomerang) external onlyOwner {
@@ -73,6 +91,8 @@ contract Vault is
 
 	function profit(address target, address token, uint256 amount) external OnlyBoomerang OnlyMembers(target) {
 		require(token == profitToken, "E: token error");
+		verifyTimestamp(target);
+		verifyProfit(amount);
 
 		uint256 tokenBalance = IERC20Upgradeable(token).balanceOf(address(this));
 		/// save gas
@@ -112,6 +132,14 @@ contract Vault is
 
         uint256 ethBalance = address(this).balance;
        	payable(recipient).transfer(balance + ethBalance);
+	}
+
+	function setInterval(uint256 newInterval) external onlyOwner {
+		interval = newInterval;
+	}
+
+	function setMaximumProfit(uint256 newMaximumProfit) external onlyOwner {
+		maximumProfit = newMaximumProfit;
 	}
 
 	function sync() external {
