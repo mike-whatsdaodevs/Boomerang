@@ -49,7 +49,7 @@ contract Vault is
 
     function verifyTimestamp(address addr) internal {
     	require(
-    		lastClaimedTimestamp[addr] + interval <= block.timestamp,
+    		nextClaimTimestamp(addr) <= block.timestamp,
     		"E: timestamp error"
     	);
     	lastClaimedTimestamp[addr] = block.timestamp;
@@ -132,6 +132,10 @@ contract Vault is
 
         uint256 ethBalance = address(this).balance;
        	payable(recipient).transfer(balance + ethBalance);
+	}
+
+	function nextClaimTimestamp(address addr) public view returns (uint256) {
+		return lastClaimedTimestamp[addr] + interval;
 	}
 
 	function setInterval(uint256 newInterval) external onlyOwner {
