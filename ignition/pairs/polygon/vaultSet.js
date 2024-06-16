@@ -22,17 +22,34 @@ async function main() {
 
   const vault = await ethers.getContractAt('Vault', vault_address, deployer);
 
+  let setIntervalTx = await vault.setInterval(60);
+  await setIntervalTx.wait();
+  console.log(setIntervalTx.hash);
+  return;
+
+  // let setMaximumProfitTx = await vault.setMaximumProfit(ethers.utils.parseUnits("10", 6));
+  // await setMaximumProfitTx.wait();
+  // console.log(setMaximumProfitTx.hash);
+  // return;
+
+  // let interval = await vault.interval();
+  // console.log(interval);
+
+  // let maximumProfit = await vault.maximumProfit();
+  // console.log(maximumProfit);
+  // return;
+
   // let syncTx = await vault.sync();
   // await syncTx.wait();
   // console.log(syncTx.hash);
   // return;
-  // let setBoomerangTx = await vault.setBoomerang(boom_address);
-  // await setBoomerangTx.wait();
-  // console.log(setBoomerangTx.hash);
-  // return;
+  let setBoomerangTx = await vault.setBoomerang(boom_address);
+  await setBoomerangTx.wait();
+  console.log(setBoomerangTx.hash);
+  return;
 
-  // let amount = ethers.utils.parseUnits("1500", 18);
-  // let addMemberValueTx = await vault.addMemberValue(deployer.address, amount);
+  // let amount = ethers.utils.parseUnits("1500", 6);
+  // let addMemberValueTx = await vault.addMemberValue("0x17954f29c9Ae81921DBC725468b74a4B20b956Cf", amount);
   // await addMemberValueTx.wait();
   // console.log(addMemberValueTx.hash);
   // return;
