@@ -30,7 +30,6 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
     error PairError(address token, address pair);
 
     mapping(address => bool) public whitelistProtocol;
-    mapping(address => bool) public managers;
 
     uint256 public volume;
 
@@ -46,21 +45,12 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
         _;
     }
 
-    modifier onlyManager() {
-        require(managers[msg.sender], "E: caller is not allowed");
-        _;
-    }
-
     function getSinglePath(address token0, address token1, uint24 fee) public view returns (bytes memory path) {
         path = abi.encodePacked(token0, fee, token1);
     }
 
     function setProtocolWhitelist(address protocol, bool status) external onlyOwner {
         whitelistProtocol[protocol] = status;
-    }
-
-    function setManager(address manager, bool status) external onlyOwner {
-        managers[manager] = status;
     }
 
     function getMultiPath(address[] memory tokens, uint24[] memory fees) public view returns (bytes memory path) {
@@ -299,7 +289,7 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
     //     token.safeTransfer(recipient, balance);
     // }
 
-    function requestFlashLoan(address _token, uint256 _amount, bytes memory params) public onlyManager {
+    function requestFlashLoan(address _token, uint256 _amount, bytes memory params) external {
         volume += _amount;
         address receiverAddress = address(this);
         address asset = _token;

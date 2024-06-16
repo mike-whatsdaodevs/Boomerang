@@ -28,8 +28,8 @@ contract Vault is
 	uint256 public totalClaimed;
 
 	mapping(address => uint256) public lastClaimedTimestamp;
-	uint256 interval;
-	uint256 maximumProfit;
+	uint256 public interval;
+	uint256 public maximumProfit;
 
 	event Profit(address target, address token, uint256 amount, uint256 currentProfit, uint256 timestamp);
 
