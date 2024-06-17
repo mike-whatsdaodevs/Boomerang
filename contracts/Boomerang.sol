@@ -216,7 +216,7 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
             path, 
             address(this),
             amountIn,
-            0
+            amountOutMin
         );
         amountOut = router.uniswapV3(exactParams, value);
     }
