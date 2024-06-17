@@ -149,39 +149,9 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
         amountsOut = SushiV2Library.getAmountsOut(uniswapV2Factory, amount, path);
     }
 
-    function swapV2(
-        address uniswapRouter,
-        uint256 amountIn,
-        uint256 amountOutMin,
-        address[] calldata path,
-        address to
-    ) public payable returns (uint256) {
-        require(path.length >= 2, "PA6");
-        uint256 amountOut = uniswapRouter.uniswapV2(amountIn, amountOutMin, path, to, msg.value);
-        return amountOut;
-    }
-
-    function swapV3Single(
-        address uniswapRouter,
-        ISwapRouter02.ExactInputSingleParams calldata params
-    ) external payable returns (uint256) {
-        uint256 amountOut = uniswapRouter.uniswapV3Single(params, msg.value);
-        return amountOut;
-    }
-
-    function swapV3ExactInput(
-        address uniswapRouter,
-        ISwapRouter02.ExactInputParams calldata params
-    ) external payable returns (uint256) {
-        uint256 amountOut = uniswapRouter.uniswapV3(params, msg.value);
-        return amountOut;
-    }
-
-
     function safeApprove(address token, address protocol) external onlyWhiltelist(protocol) {
         token.safeApprove(protocol, type(uint256).max);
     }
-
 
     struct Params {
         uint256[] protocolTypes;
@@ -189,10 +159,6 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
         bytes[] paths;
         address target;
         uint256 amountIn;
-    }
-
-    function encodePair(address token, uint256 amount) external view returns (bytes memory) {
-        return abi.encode(token, amount);
     }
 
     // function swapSingleCall(
