@@ -12,6 +12,7 @@ import {Address} from '@openzeppelin/contracts/utils/Address.sol';
 import {IUniswapV2Pair} from "./interfaces/IUniswapV2Pair.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IVault} from "./interfaces/IVault.sol";
+import {IWETH9} from "./interfaces/IWETH9.sol";
 
 import {FlashLoanSimpleReceiverBase} from "@aave/core-v3/contracts/flashloan/base/FlashLoanSimpleReceiverBase.sol";
 import {IPoolAddressesProvider} from "@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol";
@@ -289,9 +290,14 @@ contract Boomerang is FlashLoanSimpleReceiverBase, Ownable {
         uint256 tokenBalance = IERC20(asset).balanceOf(address(this));
 
         uint256 profit = tokenBalance - totalAmount;
-        IERC20(asset).transfer(vault, profit);
         IVault(vault).profit(p.target, asset, profit);
-        return true;
+
+        if(asset == weth9) {
+            IWETH9(asset).withdraw(profit);
+            payable(p.target).transfer(profit);
+            return true;
+        } 
+        IERC20(asset).transfer(p.target, profit);
     }
 
 

@@ -7,7 +7,8 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/U
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {IVault} from "./interfaces/IVault.sol";
-import {IWETH9} from "./interfaces/IWETH9.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+
 contract Vault is
 	IVault,
     OwnableUpgradeable, 
@@ -15,31 +16,36 @@ contract Vault is
     UUPSUpgradeable 
 {
     using SafeMath for uint256;
+    uint256 constant public USDT_DECIMALS = 1E6;
+    address immutable public USDT;
 
     address public boomerang;
-	
+
 	mapping(address => uint256) public members;
-	mapping(address => uint256) public profits;
-	mapping(address => uint256) public claimed;
-	uint256 public tokenReserve;
-	address public profitToken;
-
-	uint256 public totalProfit;
-	uint256 public totalClaimed;
-
+	uint256 public totalMembers;
+	//// token => member => amount
+	mapping(address => mapping(address => uint256)) public profits;
+	mapping(address => uint256) public usdtProfits;
+	//// token => profit
+	mapping(address => uint256) public totalProfits;
+	/// member => timestamp
 	mapping(address => uint256) public lastClaimedTimestamp;
 	uint256 public interval;
+	/// token => amount
 	uint256 public maximumProfit;
 
-	event Profit(address target, address token, uint256 amount, uint256 currentProfit, uint256 timestamp);
+	struct OracleData {
+		address pricefeed;
+		uint256 decimals;
+	}
+	mapping(address => OracleData) public oracles;
+	mapping(address => uint256) public tokenDecimals;
 
-    constructor() {
+	event Profit(address target, address token, uint256 amount, uint256 timestamp);
+
+    constructor(address usdt_address) {
         _disableInitializers();
-    }
-
-    modifier OnlyMembers(address addr) {
-    	require(members[addr] > 0, "E: address is not member");
-    	_;
+        USDT = usdt_address;
     }
 
     modifier OnlyBoomerang() {
@@ -61,11 +67,10 @@ contract Vault is
 
     receive() external payable {}
 
-    function initialize(address _profitToken) external initializer {
+    function initialize() external initializer {
         __Pausable_init();
         __Ownable_init();
         __UUPSUpgradeable_init();
-        profitToken = _profitToken;
         interval = 1 days;
         maximumProfit = 10E6;
     }
@@ -89,49 +94,18 @@ contract Vault is
 		}
 	}
 
-	function profit(address target, address token, uint256 amount) external OnlyBoomerang OnlyMembers(target) {
-		require(token == profitToken, "E: token error");
+	function profit(address target, address token, uint256 amount) external OnlyBoomerang {
 		verifyTimestamp(target);
-		verifyProfit(amount);
+	 	uint256 usdtValue = calculateUSDWealth(token, amount);
+	 	verifyProfit(usdtValue);
 
-		uint256 tokenBalance = IERC20Upgradeable(token).balanceOf(address(this));
-		/// save gas
-		uint256 currentReserve = tokenReserve + amount;
-		require(currentReserve <= tokenBalance, "E: amount error");
-		tokenReserve = currentReserve;
-		
-		uint256 profit = profits[target] + amount;
-		require(profit + claimed[target] <= members[target], "E: profit exceed maximum");
-		profits[target] = profit;
+		profits[token][target] += amount;
+		usdtProfits[target] += usdtValue;
 
-		totalProfit += profit;
-		emit Profit(target, token, amount, profit, block.timestamp);
-	}
+		require(usdtProfits[target] <= members[target], "E:exceed ceiling");
 
-	function claim() external OnlyMembers(msg.sender) {
-		uint256 profit = profits[msg.sender];
-		require(profit > 0, "E: profit is zero");
-
-		IERC20Upgradeable(profitToken).transfer(msg.sender, profit);
-		profits[msg.sender] = 0;
-		claimed[msg.sender] += profit;
-		tokenReserve -= profit;
-		totalClaimed += profit;
-	}
-
-	function forceWithdrawERC20(address token, address recipient) external onlyOwner {
-		uint256 balance = IERC20Upgradeable(token).balanceOf(address(this));
-		IERC20Upgradeable(token).transfer(recipient, balance);
-	}
-
-	function forceWithdrawNative(address weth9, address recipient) external onlyOwner {
-		uint256 balance = IERC20Upgradeable(weth9).balanceOf(address(this));
-        if (balance > 0) {
-            IWETH9(weth9).withdraw(balance);
-        }
-
-        uint256 ethBalance = address(this).balance;
-       	payable(recipient).transfer(balance + ethBalance);
+		totalProfits[token] += amount;
+		emit Profit(target, token, amount, block.timestamp);
 	}
 
 	function nextClaimTimestamp(address addr) public view returns (uint256) {
@@ -146,8 +120,38 @@ contract Vault is
 		maximumProfit = newMaximumProfit;
 	}
 
-	function sync() external {
-		tokenReserve = IERC20Upgradeable(profitToken).balanceOf(address(this));
+	function setOracle(address token, address pricefeed, uint256 decimals) external onlyOwner {
+		OracleData memory oracleData = OracleData(pricefeed, decimals);
+		oracles[token] = oracleData;
+	}
+
+	function setTokenDecimals(address token, uint256 decimals) external onlyOwner {
+		tokenDecimals[token] = decimals;
+	}
+
+	function getLinkDecimals(address feed) public view returns (uint8) {
+        return AggregatorV3Interface(feed).decimals();
+    }
+
+    function getTokenPrice(address pricefeed) internal view returns (int) {
+        (
+            /* uint80 roundID */,
+            int answer,
+            /*uint startedAt*/,
+            /*uint timeStamp*/,
+            /*uint80 answeredInRound*/
+        ) = AggregatorV3Interface(pricefeed).latestRoundData();
+        return answer;
+    }
+
+    function calculateUSDWealth(address tokenIn, uint256 amountIn) public view returns (uint256) {
+    	if(tokenIn == USDT) {
+    		return amountIn;
+    	}
+        OracleData memory oracleData = oracles[tokenIn];
+        int answer = getTokenPrice(oracleData.pricefeed);
+        uint256 tokenInDecimal = tokenDecimals[tokenIn];
+        return amountIn.mul(USDT_DECIMALS).mul(uint(answer)) / tokenInDecimal.mul(oracleData.decimals);
     }
 
 	 /// uups interface

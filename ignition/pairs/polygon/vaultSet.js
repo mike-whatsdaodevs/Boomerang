@@ -25,15 +25,13 @@ async function main() {
   let setIntervalTx = await vault.setInterval(60);
   await setIntervalTx.wait();
   console.log(setIntervalTx.hash);
-  return;
 
-  // let setMaximumProfitTx = await vault.setMaximumProfit(ethers.utils.parseUnits("10", 6));
-  // await setMaximumProfitTx.wait();
-  // console.log(setMaximumProfitTx.hash);
-  // return;
+  let interval = await vault.interval();
+  console.log(interval);
 
-  // let interval = await vault.interval();
-  // console.log(interval);
+  let setBoomerangTx = await vault.setBoomerang(deployer.address);
+  await setBoomerangTx.wait();
+  console.log(setBoomerangTx.hash);
 
   // let maximumProfit = await vault.maximumProfit();
   // console.log(maximumProfit);
@@ -43,29 +41,30 @@ async function main() {
   // await syncTx.wait();
   // console.log(syncTx.hash);
   // return;
-  let setBoomerangTx = await vault.setBoomerang(boom_address);
-  await setBoomerangTx.wait();
-  console.log(setBoomerangTx.hash);
-  return;
-
-  // let amount = ethers.utils.parseUnits("1500", 6);
-  // let addMemberValueTx = await vault.addMemberValue("0x17954f29c9Ae81921DBC725468b74a4B20b956Cf", amount);
-  // await addMemberValueTx.wait();
-  // console.log(addMemberValueTx.hash);
+  // let setBoomerangTx = await vault.setBoomerang(boom_address);
+  // await setBoomerangTx.wait();
+  // console.log(setBoomerangTx.hash);
   // return;
+  let whiteListAddress = deployer.address;
+  let amount = ethers.utils.parseUnits("1500", 6);
+  let addMemberValueTx = await vault.addMemberValue(whiteListAddress, amount);
+  await addMemberValueTx.wait();
+  console.log(addMemberValueTx.hash);
+  console.log(await vault.members(whiteListAddress));
+  return;
 
   // let claimTx = await vault.claim();
   // await claimTx.wait();
   // console.log(claimTx.hash);
 
-  let profit = await vault.profits(deployer.address);
-  console.log(ethers.utils.formatUnits(profit, 6));
+  // let profit = await vault.profits(deployer.address);
+  // console.log(ethers.utils.formatUnits(profit, 6));
 
-  let claimedAmount = await vault.claimed(deployer.address);
-  console.log(ethers.utils.formatUnits(claimedAmount, 6));
+  // let claimedAmount = await vault.claimed(deployer.address);
+  // console.log(ethers.utils.formatUnits(claimedAmount, 6));
 
-  console.log(await vault.totalProfit());
-  console.log(await vault.totalClaimed());
+  // console.log(await vault.totalProfit());
+  // console.log(await vault.totalClaimed());
 
 
 

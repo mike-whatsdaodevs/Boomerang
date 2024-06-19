@@ -10,7 +10,7 @@ task('accounts', 'Prints the list of accounts', async (taskArgs, hre) => {
     console.log(account.address)
   }
 })
-
+  
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
 
@@ -38,7 +38,7 @@ module.exports = {
         process.env.PRIVATE_KEY_BOOM !== undefined ? [process.env.PRIVATE_KEY_BOOM] : [],
     },
     polygon: {
-      url: "https://polygon-mainnet.infura.io/v3/" + process.env.INFURA,
+      url: "https://rpc-mainnet.maticvigil.com/v1/16f57ea575dda814830130dcd4b258483ee71d43",///"https://polygon-mainnet.infura.io/v3/" + process.env.INFURA,
       accounts: 
         process.env.PRIVATE_KEY_BOOM !== undefined ? [process.env.PRIVATE_KEY_BOOM] : [],
     },

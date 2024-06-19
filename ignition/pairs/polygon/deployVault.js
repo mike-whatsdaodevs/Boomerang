@@ -24,7 +24,7 @@ async function main() {
   let usdt_address = process.env.USDT;
 
   let overrides = {
-    gasPrice: ethers.utils.parseUnits("40", 9),
+    gasPrice: ethers.utils.parseUnits("100", 9),
   }
 
   console.log("usdt_address is:", usdt_address);
@@ -34,7 +34,7 @@ async function main() {
   await vault.deployed()
   console.log('vault deployed to:', vault.address);
 
-  const initialize_data = await vault.populateTransaction.initialize(usdt_address);
+  const initialize_data = await vault.populateTransaction.initialize();
   console.log("initialize_data data is",initialize_data)
 
   const BoomerangProxy = await hre.ethers.getContractFactory('BoomerangProxy')

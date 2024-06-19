@@ -35,6 +35,7 @@ async function main() {
   let dai_address = "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063";
   let axlUSDC_address = "0x750e4C4984a9e0f12978eA6742Bc1c5D248f40ed";
   let far_address = "0x5F32AbeeBD3c2fac1E7459A27e1AE9f1C16ccccA";
+  let crv_address = "0x172370d5Cd63279eFa6d502DAB29171933a610AF";
 
   let fees = [100, 500, 3000, 10000];
 
@@ -60,9 +61,9 @@ async function main() {
   let path1 = await boom.getMultiPath(
     [ 
       usdt_address, 
-      weth_address,
+      crv_address,
       wmatic_address,
-      usdt_address
+      rndr_address
 
     ],
     [
@@ -88,7 +89,8 @@ async function main() {
 
 
   let amount = ethers.utils.parseUnits("1", 6);
-  let amount1 = ethers.utils.parseEther("3");
+  let amount1 = ethers.utils.parseUnits("1.8", 6);
+  let amount2 = ethers.utils.parseEther("3");
   let override = {
     value: amount
   }
@@ -113,6 +115,8 @@ async function main() {
 
   let paramsDecodeData = await boom.paramsDecode(paramsEncodeData);
   console.log(paramsDecodeData);
+
+ // console.log(usdt_address, amount, paramsEncodeData);return;
 
   let tx1 = await boom.requestFlashLoan(
     usdt_address,
