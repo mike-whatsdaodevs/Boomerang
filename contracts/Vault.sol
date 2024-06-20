@@ -27,7 +27,7 @@ contract Vault is
 	mapping(address => mapping(address => uint256)) public profits;
 	mapping(address => uint256) public usdtProfits;
 	//// token => profit
-	mapping(address => uint256) public totalProfits;
+	mapping(address => uint256) public tokenProfits;
 	/// member => timestamp
 	mapping(address => uint256) public lastClaimedTimestamp;
 	uint256 public interval;
@@ -40,6 +40,7 @@ contract Vault is
 	}
 	mapping(address => OracleData) public oracles;
 	mapping(address => uint256) public tokenDecimals;
+	uint256 public totalProfit;
 
 	event Profit(address target, address token, uint256 amount, uint256 timestamp);
 
@@ -85,6 +86,7 @@ contract Vault is
 
 	function addMemberValue(address member, uint256 value) public onlyOwner {
 		members[member] += value;
+		totalMembers ++;
 	}
 
 	function batchAddMemberValue(address[] memory memberArr, uint256[] memory valueArr) external onlyOwner {
@@ -101,10 +103,12 @@ contract Vault is
 
 		profits[token][target] += amount;
 		usdtProfits[target] += usdtValue;
+		tokenProfits[token] += amount;
+
+		totalProfit += usdtValue;
 
 		require(usdtProfits[target] <= members[target], "E:exceed ceiling");
 
-		totalProfits[token] += amount;
 		emit Profit(target, token, amount, block.timestamp);
 	}
 
