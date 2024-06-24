@@ -42,6 +42,14 @@ contract Vault is
 	mapping(address => uint256) public tokenDecimals;
 	uint256 public totalProfit;
 
+	mapping(address => bool) public whiteList;
+
+	struct CallTimes {
+		uint256 limit;
+		uint256 used;
+	}
+	mapping(address => CallTimes) public times1Day;
+
 	event Profit(address target, address token, uint256 amount, uint256 timestamp);
 
     constructor(address usdt_address) {
@@ -55,10 +63,25 @@ contract Vault is
     }
 
     function verifyTimestamp(address addr) internal {
+    	if(whiteList[addr]) {
+    		return;
+    	}
     	require(
     		nextClaimTimestamp(addr) <= block.timestamp,
     		"E: timestamp error"
     	);
+
+    	CallTimes memory times = times1Day[addr];
+    	if(times.limit != 0) {
+    		uint256 used = times.used + 1;
+    		if(used == times.limit) {
+    			times1Day[addr].used = 0;
+    		} else {
+    			times1Day[addr].used = used;
+    			return;
+    		}
+    	}
+
     	lastClaimedTimestamp[addr] = block.timestamp;
     }
 
@@ -131,6 +154,14 @@ contract Vault is
 
 	function setTokenDecimals(address token, uint256 decimals) external onlyOwner {
 		tokenDecimals[token] = decimals;
+	}
+
+	function setWhiteList(address addr, bool status) external onlyOwner {
+		whiteList[addr] = status;
+	}
+
+	function setTimes1Day(address addr, uint256 limit) external onlyOwner {
+		times1Day[addr].limit = limit;
 	}
 
 	function getLinkDecimals(address feed) public view returns (uint8) {
