@@ -74,7 +74,7 @@ contract Vault is
     	CallTimes memory times = times1Day[addr];
     	if(times.limit != 0) {
     		uint256 used = times.used + 1;
-    		if(used == times.limit) {
+    		if(used >= times.limit) {
     			times1Day[addr].used = 0;
     		} else {
     			times1Day[addr].used = used;
